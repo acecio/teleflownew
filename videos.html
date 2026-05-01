@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>VideoFlow — Download Videos</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#000;--bg2:#0a0a0a;--bg3:#111;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --text:#fff;--text2:rgba(255,255,255,0.6);--text3:rgba(255,255,255,0.3);
+  --green:#4ade80;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;
+  --pro:#a78bfa;--pro-bg:rgba(167,139,250,0.08);--pro-border:rgba(167,139,250,0.25);
+  --inf:#60d0ff;--inf-bg:rgba(96,208,255,0.08);--inf-border:rgba(96,208,255,0.25);
+}
+[data-theme="light"]{
+  --bg:#f4f4f0;--bg2:#fff;--bg3:#e8e8e4;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.15);
+  --text:#0a0a0a;--text2:rgba(0,0,0,0.55);--text3:rgba(0,0,0,0.3);
+  --green:#16a34a;--red:#dc2626;--amber:#d97706;--blue:#2563eb;
+  --pro:#7c3aed;--pro-bg:rgba(124,58,237,0.07);--pro-border:rgba(124,58,237,0.2);
+  --inf:#0284c7;--inf-bg:rgba(2,132,199,0.07);--inf-border:rgba(2,132,199,0.2);
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Inter',monospace;transition:background .2s,color .2s}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(128,128,128,0.06) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse 100% 60% at 50% 0%,black,transparent);pointer-events:none;z-index:0}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:56px;background:var(--bg);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-logo{font-weight:800;font-size:14px;letter-spacing:-.3px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.user-chip{display:flex;align-items:center;gap:8px;background:rgba(128,128,128,0.06);border:1px solid var(--border2);border-radius:50px;padding:4px 12px 4px 5px;font-size:11px;cursor:pointer;transition:border-color .2s}
+.user-chip:hover{border-color:var(--text3)}
+.user-av{width:24px;height:24px;border-radius:50%;background:rgba(128,128,128,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.plan-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.plan-badge.free{background:rgba(128,128,128,0.1);color:var(--text3);border:1px solid var(--border)}
+.plan-badge.pro{background:var(--pro-bg);color:var(--pro);border:1px solid var(--pro-border)}
+.plan-badge.infinity{background:var(--inf-bg);color:var(--inf);border:1px solid var(--inf-border)}
+.wrap{max-width:980px;margin:0 auto;padding:72px 24px 60px;position:relative;z-index:1}
+.theme-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--border2);background:rgba(128,128,128,0.06);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s;color:var(--text)}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:80vh}
+.login-card{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:44px 40px;width:100%;max-width:380px}
+.lc-icon{font-size:32px;text-align:center;margin-bottom:18px}
+.lc-title{font-size:20px;font-weight:800;letter-spacing:-.5px;text-align:center;margin-bottom:7px}
+.lc-sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:28px;line-height:1.6}
+.step-dots{display:flex;justify-content:center;gap:8px;margin-bottom:28px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border2);transition:background .3s}
+.dot.active{background:var(--text)}.dot.done{background:var(--text2)}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 15px;color:var(--text);font-family:'Inter',monospace;font-size:13px;outline:none;transition:border-color .2s}
+.field input::placeholder{color:var(--text3)}
+.field input:focus{border-color:var(--text2)}
+.btn-full{width:100%;padding:13px;border-radius:10px;font-family:'Inter',monospace;font-size:12px;font-weight:700;cursor:pointer;border:none;letter-spacing:.5px;transition:all .2s;margin-top:5px}
+.btn-white{background:var(--text);color:var(--bg)}.btn-white:hover:not(:disabled){opacity:.85}.btn-white:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);margin-top:8px}.btn-ghost:hover{color:var(--text);border-color:var(--text3)}
+.err-msg{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);color:#f87171;border-radius:10px;padding:9px 13px;font-size:11px;margin-bottom:13px;display:none}
+.err-msg.show{display:block}
+.back-link{display:block;text-align:center;font-size:10px;color:var(--text3);text-decoration:none;margin-top:18px;letter-spacing:.5px;cursor:pointer}.back-link:hover{color:var(--text)}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:rgba(128,128,128,0.05);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:24px;width:fit-content;flex-wrap:wrap}
+.tab{padding:7px 15px;border-radius:7px;border:none;background:transparent;color:var(--text3);font-family:'Inter',monospace;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.4px}
+.tab.active{background:rgba(128,128,128,0.12);color:var(--text);box-shadow:inset 0 0 0 1px var(--border2)}
+.tab:hover:not(.active){color:var(--text2)}
+
+/* BUTTONS */
+.btn{padding:10px 16px;border-radius:10px;border:none;font-family:'Inter',monospace;font-weight:700;font-size:11px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px;white-space:nowrap}
+.btn-w{background:var(--text);color:var(--bg)}.btn-w:hover:not(:disabled){opacity:.85}.btn-w:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm{padding:7px 12px;font-size:10px;border-radius:8px}
+.btn-danger{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border2)}.btn-outline:hover{color:var(--text);border-color:var(--text3)}
+
+/* INPUTS */
+.url-input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Inter',monospace;font-size:12px;outline:none;transition:border-color .2s}
+.url-input::placeholder{color:var(--text3)}.url-input:focus{border-color:var(--text2)}
+textarea.url-input{resize:vertical;min-height:96px;line-height:1.6}
+.chat-select{background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;color:var(--text);font-family:'Inter',monospace;font-size:11px;outline:none;cursor:pointer;width:100%}
+.chat-select option{background:var(--bg2)}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:10px}
+.card-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.input-row{display:flex;gap:8px;margin-bottom:10px;align-items:flex-start}
+
+/* VIDEO INFO */
+#video-info{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:10px;display:none}
+.vmeta{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.vthumb{width:80px;height:50px;border-radius:7px;object-fit:cover;background:var(--bg3);flex-shrink:0}
+.vtitle{font-size:12px;font-weight:700;margin-bottom:5px;line-height:1.3}
+.vbadges{display:flex;gap:5px;flex-wrap:wrap}
+.vbadge{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:600;background:rgba(128,128,128,0.08);border:1px solid var(--border2);color:var(--text2)}
+.qlabel{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:5px;margin-bottom:10px}
+.qbtn{padding:9px 10px;border-radius:7px;border:1px solid var(--border2);background:rgba(128,128,128,0.03);color:var(--text2);cursor:pointer;font-family:'Inter',monospace;font-size:10px;transition:all .15s;text-align:left}
+.qbtn:hover{border-color:var(--text3);color:var(--text)}.qbtn.sel{border-color:var(--text);background:rgba(128,128,128,0.08);color:var(--text)}
+.qbtn .qres{font-size:13px;font-weight:800;display:block}
+.qbtn .qext{font-size:9px;font-weight:500;background:rgba(128,128,128,0.15);padding:1px 5px;border-radius:4px;color:var(--text3)}
+.qbtn .qsize{font-size:11px;font-weight:700;color:var(--text);margin-top:3px;display:block}
+.qbtn .qsizelabel{font-size:9px;color:var(--text3);display:block;margin-top:1px}
+
+/* DROP ZONE */
+.drop-zone{border:1px dashed var(--border2);border-radius:12px;padding:22px 20px;text-align:center;cursor:pointer;background:rgba(128,128,128,0.02);transition:all .25s;margin-bottom:10px}
+.drop-zone:hover,.drop-zone.over{border-color:var(--text3);background:rgba(128,128,128,0.04)}
+.dz-icon{font-size:22px;margin-bottom:6px}.dz-title{font-size:12px;font-weight:700;margin-bottom:2px}.dz-sub{font-size:10px;color:var(--text3)}
+
+/* QUEUE */
+.sec-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin:14px 0 7px}
+.queue-wrap{display:flex;flex-direction:column;gap:5px}
+.queue-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 13px;display:flex;align-items:flex-start;gap:10px}
+.qs{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.qs.pending,.qs.downloading{background:var(--amber);animation:pulse 1.5s infinite}
+.qs.completed{background:var(--green)}.qs.failed{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.qi{flex:1;overflow:hidden;min-width:0}
+.qtitle{font-size:10px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qurl{font-size:9px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.qmeta{font-size:9px;color:var(--text3);margin-top:2px}
+.qprogbar{margin-top:5px;background:var(--border);border-radius:3px;height:2px}
+.qprogfill{height:100%;border-radius:3px;background:var(--text);transition:width .4s ease}
+.qproginfo{display:flex;justify-content:space-between;margin-top:2px;font-size:9px;color:var(--text3)}
+.qchat{font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(96,165,250,.1);color:var(--blue);flex-shrink:0;white-space:nowrap;align-self:center}
+
+/* SCHEDULE */
+.sched-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.sched-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px}
+.sched-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sched-dot.pending{background:var(--amber)}.sched-dot.running{background:var(--blue);animation:pulse 1s infinite}.sched-dot.done{background:var(--green)}
+.sched-info{flex:1;overflow:hidden}
+.sched-url{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sched-time{font-size:9px;color:var(--text3);margin-top:2px}
+
+/* ANALYTICS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:13px 15px}
+.slabel{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.sval{font-size:24px;font-weight:800;line-height:1}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.chart-card h4{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:11px}
+.hist-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.hist-card h4{padding:11px 15px;font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.htable{width:100%;border-collapse:collapse}
+.htable th{padding:7px 13px;text-align:left;font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.htable td{padding:8px 13px;font-size:10px;border-bottom:1px solid var(--border);color:var(--text)}
+.htable tr:last-child td{border-bottom:none}.htable tr:hover td{background:rgba(128,128,128,0.02)}
+.pill{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700}
+.pill.completed{background:rgba(74,222,128,.1);color:var(--green)}.pill.failed{background:rgba(248,113,113,.1);color:var(--red)}.pill.pending{background:rgba(251,191,36,.1);color:var(--amber)}
+
+/* BENTO */
+.bento-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.bento-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .2s}
+.bento-card.pro-card{border-color:var(--pro-border)}.bento-card.pro-card:hover{border-color:var(--pro)}
+.bento-card.inf-card{border-color:var(--inf-border)}.bento-card.inf-card:hover{border-color:var(--inf)}
+.bento-card.full{grid-column:1/-1}
+.bento-icon{font-size:22px;margin-bottom:11px}
+.bento-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.bento-title{font-size:17px;font-weight:800;letter-spacing:-.4px;margin-bottom:4px}
+.bento-sub{font-size:10px;color:var(--text2);line-height:1.5}
+.bento-price{font-size:28px;font-weight:800;letter-spacing:-.5px;margin:10px 0 3px}
+.bento-price span{font-size:12px;font-weight:400;color:var(--text2)}
+.bento-tag{position:absolute;top:16px;right:16px}
+.bento-btn{margin-top:14px;width:100%;padding:10px;border-radius:8px;font-family:'Inter',monospace;font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;border:none;transition:all .2s}
+.bento-btn.pro-btn{background:var(--pro);color:#fff}.bento-btn.pro-btn:hover{opacity:.9}
+.bento-btn.inf-btn{background:var(--inf);color:#001a2a}.bento-btn.inf-btn:hover{opacity:.9}
+.bento-btn.ghost-btn{background:rgba(128,128,128,0.08);color:var(--text2);border:1px solid var(--border2)}.bento-btn.ghost-btn:hover{color:var(--text)}
+.feature-list{margin-top:11px;display:flex;flex-direction:column;gap:5px}
+.feature-item{font-size:10px;color:var(--text2);display:flex;align-items:center;gap:7px}
+.feature-item::before{content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0;background:var(--text3)}
+.pro-card .feature-item::before{background:var(--pro)}.inf-card .feature-item::before{background:var(--inf)}
+
+/* PROFILE */
+.profile-bento{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.prof-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.prof-card.wide{grid-column:1/-1}
+.pc-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.pc-val{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.pc-sub{font-size:9px;color:var(--text3);margin-top:3px}
+.settings-row{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.settings-row-info h4{font-size:12px;font-weight:700;margin-bottom:2px}.settings-row-info p{font-size:10px;color:var(--text2)}
+.toggle{width:36px;height:19px;background:var(--border2);border-radius:10px;position:relative;cursor:pointer;transition:background .2s;border:none;padding:0}
+.toggle.on{background:var(--text)}
+.toggle-knob{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--bg2);transition:transform .2s;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on .toggle-knob{transform:translateX(17px)}
+
+/* PLAYLIST */
+.playlist-entries{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;margin-top:8px}
+.pe-item{display:flex;align-items:center;gap:8px;padding:5px 9px;border-radius:7px;background:rgba(128,128,128,.04);border:1px solid var(--border);font-size:10px;color:var(--text2)}
+.pe-num{font-size:9px;color:var(--text3);width:22px;flex-shrink:0;text-align:right}
+.pe-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;padding:28px 24px;width:100%;max-width:400px;position:relative;max-height:90vh;overflow-y:auto}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px 6px;line-height:1;border-radius:6px}
+.modal-close:hover{color:var(--text);background:rgba(128,128,128,.08)}
+.modal-title{font-size:16px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+.modal-sub{font-size:11px;color:var(--text2);margin-bottom:16px;line-height:1.5}
+.modal-divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.promo-row{display:flex;gap:7px;margin-bottom:10px}
+.promo-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--text);font-family:'Inter',monospace;font-size:12px;outline:none;transition:border-color .2s;letter-spacing:1px}
+.promo-input::placeholder{color:var(--text3);letter-spacing:.3px;font-size:11px}.promo-input:focus{border-color:var(--text2)}
+.promo-apply{padding:10px 14px;border-radius:9px;font-family:'Inter',monospace;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border2);background:rgba(128,128,128,.08);color:var(--text2);white-space:nowrap;transition:all .2s}.promo-apply:hover{color:var(--text)}
+.promo-result{border-radius:9px;padding:10px 12px;font-size:10px;line-height:1.6;display:none}.promo-result.show{display:block}
+.promo-result.ok{background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);color:var(--green)}
+.promo-result.err{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);color:var(--red)}
+.rzp-block{background:rgba(128,128,128,.04);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.rzp-block-title{font-size:11px;font-weight:700;margin-bottom:6px}.rzp-block p{font-size:10px;color:var(--text2);line-height:1.7}
+.upi-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.upi-btn{padding:9px 10px;border-radius:8px;border:1px solid var(--border2);background:rgba(128,128,128,.04);cursor:pointer;font-family:'Inter',monospace;font-size:10px;font-weight:600;color:var(--text2);transition:all .15s;text-align:center}.upi-btn:hover{border-color:var(--text3);color:var(--text)}
+.pay-total{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-radius:9px;background:rgba(128,128,128,.06);border:1px solid var(--border);margin-bottom:12px}
+.pay-total-label{font-size:10px;color:var(--text2)}.pay-total-amount{font-size:18px;font-weight:800}
+
+/* TOASTS */
+.toast-stack{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:7px;z-index:1000}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;min-width:240px;max-width:300px;display:flex;gap:9px;align-items:flex-start;box-shadow:0 8px 32px rgba(0,0,0,.3);animation:sIn .2s ease}
+@keyframes sIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
+.toast.ok{border-color:rgba(74,222,128,.2)}.toast.err{border-color:rgba(248,113,113,.2)}.toast.inf{border-color:rgba(96,165,250,.2)}
+.ti{font-size:13px;padding-top:1px}.tb h5{font-size:11px;font-weight:700;margin-bottom:1px;color:var(--text)}.tb p{font-size:10px;color:var(--text2);line-height:1.4}
+.spin{width:13px;height:13px;border:2px solid rgba(128,128,128,.2);border-top-color:var(--text);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+@media(max-width:640px){
+  nav{padding:0 16px}.wrap{padding:64px 16px 50px}
+  .tabs{overflow-x:auto;width:100%}
+  .input-row{flex-direction:column}
+  .bento-grid,.profile-bento,.charts-row{grid-template-columns:1fr}
+  .bento-card.full,.prof-card.wide{grid-column:1}
+  .upi-grid{grid-template-columns:1fr}
+}
+
+/* ── SITE SUB-TABS ── */
+.site-tabs{display:flex;gap:4px;margin-bottom:14px}
+.stab{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text3);font-family:'Inter',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.3px}
+.stab.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.stab:hover:not(.active){color:var(--text);border-color:var(--text3)}
+
+/* ── DL CARD ── */
+.dl-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.dl-card-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+
+/* ── PROGRESS CARD ── */
+.prog-card{border:none!important;background:transparent!important;padding:0!important}
+.prog-eyebrow{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;font-weight:500}
+.prog-title{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;color:var(--text);line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.prog-sub{font-size:11px;color:var(--text3);margin-bottom:20px}
+.prog-bar-wrap{height:2px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.prog-bar-fill{height:100%;background:var(--text);border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1);width:0%}
+.prog-stats{display:flex;gap:16px;flex-wrap:wrap;font-size:10px;font-weight:700;margin-bottom:20px;letter-spacing:.5px}
+.prog-pct{color:var(--text);font-size:13px;font-weight:800}
+.prog-speed{color:var(--text3)}
+.prog-size{color:var(--text3)}
+.prog-eta{color:var(--text3)}
+.prog-phase{font-size:9px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;margin-bottom:24px}
+.prog-quote{font-size:13px;color:var(--text2);line-height:1.7;font-style:italic;padding:16px 0;border-top:1px solid var(--border);margin-top:4px;min-height:72px;transition:opacity .5s}
+.prog-quote-author{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:6px;font-style:normal}
+
+/* ── ASPECT RATIO PICKER ── */
+.ar-grid{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:2px}
+.ar-btn{padding:7px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);font-family:'Inter',monospace;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ar-btn:hover{border-color:var(--text);color:var(--text)}
+.ar-btn.active{border-color:var(--text);background:var(--text);color:var(--bg)}
+
+/* ── QUALITY GRID (tighter for this layout) ── */
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;margin-bottom:4px}
+.qbtn{padding:10px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-family:'Inter',monospace;font-size:10px;transition:all .15s;text-align:left}
+.qbtn:hover{border-color:var(--text);color:var(--text)}
+.qbtn.sel{border-color:var(--text);background:rgba(255,255,255,.08);color:var(--text)}
+.qbtn.downloading{border-color:#60d0ff;background:rgba(96,208,255,.08);color:#60d0ff;cursor:default}
+.qres{font-size:13px;font-weight:800;display:block;margin-bottom:2px}
+.qext{font-size:8px;font-weight:500;background:rgba(128,128,128,.15);padding:1px 5px;border-radius:4px;color:var(--text3)}
+.qsize{font-size:10px;font-weight:700;color:var(--text);display:block;margin-top:3px}
+.qsizelabel{font-size:8px;color:var(--text3);display:block}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">📥 videoflow</div>
+  <div class="nav-right">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">☀</button>
+    <div id="user-area" class="hidden">
+      <div class="user-chip" onclick="switchTab('profile',document.querySelector('[data-tab=profile]'))">
+        <div class="user-av" id="uav">?</div>
+        <span id="uname">…</span>
+        <span id="nav-plan-badge" class="plan-badge free" style="margin-left:4px">Free</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="lc-icon">📱</div>
+      <div class="step-dots">
+        <div class="dot active" id="d1"></div><div class="dot" id="d2"></div><div class="dot" id="d3"></div>
+      </div>
+      <div id="s-phone">
+        <div class="lc-title">Sign in</div>
+        <div class="lc-sub">Enter your Telegram number with country code</div>
+        <div id="e-phone" class="err-msg"></div>
+        <div class="field"><label>Phone Number</label><input id="inp-phone" type="tel" placeholder="+91 98765 43210" autocomplete="tel"/></div>
+        <button class="btn-full btn-white" id="btn-phone" onclick="sendCode()">Send OTP →</button>
+        <a href="/" class="back-link">← Back to home</a>
+      </div>
+      <div id="s-otp" class="hidden">
+        <div class="lc-title">Enter OTP</div>
+        <div class="lc-sub">Code sent to <b id="phone-display"></b></div>
+        <div id="e-otp" class="err-msg"></div>
+        <div class="field"><label>OTP Code</label><input id="inp-otp" type="text" placeholder="12345" maxlength="10" inputmode="numeric" autocomplete="one-time-code"/></div>
+        <button class="btn-full btn-white" id="btn-otp" onclick="verifyCode()">Verify →</button>
+        <button class="btn-full btn-ghost" onclick="goBack()">← Change number</button>
+      </div>
+      <div id="s-2fa" class="hidden">
+        <div class="lc-title">Two-Factor Auth</div>
+        <div class="lc-sub">Enter your Telegram 2FA password.</div>
+        <div id="e-2fa" class="err-msg"></div>
+        <div class="field"><label>Password</label><input id="inp-2fa" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+        <button class="btn-full btn-white" id="btn-2fa" onclick="verify2FA()">Continue →</button>
+      </div>
+      <div id="s-done" class="hidden">
+        <div class="lc-title">You're in! 🎉</div>
+        <div class="lc-sub">Redirecting…</div>
+        <div style="display:flex;justify-content:center;margin-top:18px"><div class="spin"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="main-app" class="hidden">
+    <div class="tabs">
+      <button class="tab active" data-tab="dl"      onclick="switchTab('dl',this)">⬇ Download</button>
+      <button class="tab"        data-tab="batch"   onclick="switchTab('batch',this)">⚡ Batch</button>
+      <button class="tab"        data-tab="queue"   onclick="switchTab('queue',this)">◎ Queue</button>
+      <button class="tab"        data-tab="sched"   onclick="switchTab('sched',this)">⏱ Schedule</button>
+      <button class="tab"        data-tab="an"      onclick="switchTab('an',this)">◈ Analytics</button>
+      <button class="tab"        data-tab="pay"     onclick="switchTab('pay',this)">✦ Plans</button>
+      <button class="tab"        data-tab="profile" onclick="switchTab('profile',this)">◉ Profile</button>
+    </div>
+
+    <!-- ── SINGLE DOWNLOAD ── -->
+    <div id="tab-dl">
+
+      <!-- Site type sub-tabs -->
+      <div class="site-tabs">
+        <button class="stab active" id="stab-yt"   onclick="setSiteTab('yt')">▶ YouTube</button>
+        <button class="stab"        id="stab-other" onclick="setSiteTab('other')">🌐 Other Sites</button>
+      </div>
+
+      <!-- ── YOUTUBE PANEL ── -->
+      <div id="panel-yt">
+        <div class="dl-card">
+          <div class="dl-card-label">Paste YouTube link</div>
+          <div class="input-row" style="margin-bottom:0">
+            <input class="url-input" id="yt-url" type="url" placeholder="https://youtube.com/watch?v=..." autocomplete="off" spellcheck="false" oninput="onYtUrlInput()"/>
+            <button class="btn btn-w" id="yt-fetch-btn" onclick="ytFetch()"><span id="yt-fetch-txt">Fetch</span></button>
+          </div>
+        </div>
+
+        <!-- Video info + quality picker — shown after fetch -->
+        <div id="yt-info" style="display:none">
+          <div class="dl-card" style="display:flex;gap:12px;align-items:flex-start">
+            <img id="yt-thumb" class="vthumb" src="" onerror="this.style.display='none'" style="flex-shrink:0"/>
+            <div style="flex:1;min-width:0">
+              <div class="vtitle" id="yt-title" style="margin-bottom:6px"></div>
+              <div class="vbadges">
+                <span class="vbadge" id="yt-dur"></span>
+                <span class="vbadge" id="yt-upl"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dl-card">
+            <div class="dl-card-label">Choose quality — tap to download instantly</div>
+            <div class="qgrid" id="yt-qgrid"></div>
+            <button class="btn btn-w" id="yt-dl-btn" onclick="ytDlBtnClick()" disabled style="width:100%;padding:13px;margin-top:8px;font-size:13px;font-weight:800;opacity:.4;cursor:not-allowed">📤 Download & Send to Telegram</button>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <select class="chat-select" id="yt-chat" style="flex:1"><option value="me">📩 Saved Messages</option></select>
+              <button class="btn btn-w btn-sm" onclick="loadChats('yt-chat')">Chats</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live progress card — shown when downloading -->
+        <div id="yt-progress-card" class="dl-card prog-card" style="display:none">
+          <div class="prog-eyebrow">MEDIA DOWNLOADER</div>
+          <div class="prog-title" id="yt-prog-title">paste a link.</div>
+          <div class="prog-sub" id="yt-prog-sub">download anything.</div>
+          <div class="prog-bar-wrap"><div class="prog-bar-fill" id="yt-prog-bar"></div></div>
+          <div class="prog-stats">
+            <span class="prog-pct" id="yt-prog-pct">0%</span>
+            <span class="prog-speed" id="yt-prog-speed"></span>
+            <span class="prog-size" id="yt-prog-size"></span>
+            <span class="prog-eta" id="yt-prog-eta"></span>
+          </div>
+          <div class="prog-phase" id="yt-prog-phase"></div>
+          <div class="prog-quote" id="yt-prog-quote"></div>
+          <div class="prog-quote-author" id="yt-prog-quote-author"></div>
+        </div>
+      </div>
+
+      <!-- ── OTHER SITES PANEL ── -->
+      <div id="panel-other" style="display:none">
+        <div class="dl-card">
+          <div class="dl-card-label">Paste video link</div>
+          <div class="input-row" style="margin-bottom:0">
+            <input class="url-input" id="other-url" type="url" placeholder="https://xhamster19.com/videos/..." autocomplete="off" spellcheck="false"/>
+            <button class="btn btn-w" id="other-fetch-btn" onclick="otherFetch()"><span id="other-fetch-txt">Fetch</span></button>
+          </div>
+        </div>
+
+        <div id="other-info" style="display:none">
+          <div class="dl-card" style="display:flex;gap:12px;align-items:flex-start">
+            <img id="other-thumb" class="vthumb" src="" onerror="this.style.display='none'" style="flex-shrink:0"/>
+            <div style="flex:1;min-width:0">
+              <div class="vtitle" id="other-title" style="margin-bottom:6px"></div>
+              <div class="vbadges">
+                <span class="vbadge" id="other-site"></span>
+                <span class="vbadge" id="other-dur"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dl-card">
+            <div class="dl-card-label">Choose quality — tap to download instantly</div>
+            <div class="qgrid" id="other-qgrid"></div>
+            <div class="dl-card-label" style="margin-top:10px">Aspect ratio</div>
+            <div class="ar-grid">
+              <button class="ar-btn active" onclick="setAR('16:9',   this)">▬ 16:9</button>
+              <button class="ar-btn"        onclick="setAR('original',this)">⬜ Original</button>
+              <button class="ar-btn"        onclick="setAR('21:9',   this)">▬ 21:9</button>
+              <button class="ar-btn"        onclick="setAR('2.35:1', this)">▬ 2.35:1</button>
+              <button class="ar-btn"        onclick="setAR('2:1',    this)">▬ 2:1</button>
+              <button class="ar-btn"        onclick="setAR('16:10',  this)">▭ 16:10</button>
+              <button class="ar-btn"        onclick="setAR('3:2',    this)">▭ 3:2</button>
+              <button class="ar-btn"        onclick="setAR('5:4',    this)">▭ 5:4</button>
+              <button class="ar-btn"        onclick="setAR('4:3',    this)">▭ 4:3</button>
+              <button class="ar-btn"        onclick="setAR('1:1',    this)">◻ 1:1</button>
+              <button class="ar-btn"        onclick="setAR('3:4',    this)">▯ 3:4</button>
+              <button class="ar-btn"        onclick="setAR('9:16',   this)">▯ 9:16</button>
+              <button class="ar-btn"        onclick="setAR('9:18',   this)">▯ 9:18</button>
+              <button class="ar-btn"        onclick="setAR('9:21',   this)">▯ 9:21</button>
+            </div>
+
+            <button class="btn btn-w" id="other-dl-btn" onclick="otherDlBtnClick()" disabled style="width:100%;padding:13px;margin-top:12px;font-size:13px;font-weight:800;letter-spacing:.3px;opacity:.4;cursor:not-allowed">📤 Download & Send to Telegram</button>
+
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <select class="chat-select" id="other-chat" style="flex:1"><option value="me">📩 Saved Messages</option></select>
+              <button class="btn btn-w btn-sm" onclick="loadChats('other-chat')">Chats</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live progress card -->
+        <div id="other-progress-card" class="dl-card prog-card" style="display:none">
+          <div class="prog-eyebrow">MEDIA DOWNLOADER</div>
+          <div class="prog-title" id="other-prog-title">paste a link.</div>
+          <div class="prog-sub" id="other-prog-sub">download anything.</div>
+          <div class="prog-bar-wrap"><div class="prog-bar-fill" id="other-prog-bar"></div></div>
+          <div class="prog-stats">
+            <span class="prog-pct" id="other-prog-pct">0%</span>
+            <span class="prog-speed" id="other-prog-speed"></span>
+            <span class="prog-size" id="other-prog-size"></span>
+            <span class="prog-eta" id="other-prog-eta"></span>
+          </div>
+          <div class="prog-phase" id="other-prog-phase"></div>
+          <div class="prog-quote" id="other-prog-quote"></div>
+          <div class="prog-quote-author" id="other-prog-quote-author"></div>
+        </div>
+      </div>
+
+    </div><!-- end tab-dl -->
+
+    <!-- ── BATCH / PLAYLIST ── -->
+    <div id="tab-batch" class="hidden">
+      <div class="card">
+        <div class="card-title">YouTube Playlist</div>
+        <div class="input-row">
+          <input class="url-input" id="playlist-inp" type="url" placeholder="https://youtube.com/playlist?list=..."/>
+          <button class="btn btn-w" id="pl-btn" onclick="fetchPlaylist()"><span id="pl-txt">Load Playlist</span></button>
+        </div>
+        <div id="playlist-info" class="hidden">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:6px" id="pl-count"></div>
+          <div class="playlist-entries" id="pl-entries"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Batch URLs</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px">One URL per line — any supported site</div>
+        <textarea class="url-input" id="batch-urls" placeholder="https://youtube.com/watch?v=abc&#10;https://twitter.com/user/status/123&#10;https://vimeo.com/..."></textarea>
+      </div>
+      <div class="card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:160px">
+          <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Send to</div>
+          <div style="display:flex;gap:6px">
+            <select class="chat-select" id="batch-chat-target" style="flex:1"><option value="me">📩 Saved Messages</option></select>
+            <button class="btn btn-w btn-sm" onclick="loadChats('batch-chat-target')">Load chats</button>
+          </div>
+        </div>
+        <button class="btn btn-w" style="padding:12px 24px;align-self:flex-end" id="batch-btn" onclick="startBatch()">⚡ Queue All</button>
+      </div>
+      <div id="batch-result" class="hidden">
+        <div class="card" style="background:rgba(74,222,128,.05);border-color:rgba(74,222,128,.2)">
+          <div style="font-size:11px;color:var(--green)" id="batch-result-txt"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── QUEUE ── -->
+    <div id="tab-queue" class="hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text2)" id="queue-summary">—</div>
+        <button class="btn btn-sm btn-outline" onclick="loadQueue()">↻ Refresh</button>
+      </div>
+      <div class="queue-wrap" id="full-queue-list"></div>
+    </div>
+
+    <!-- ── SCHEDULE ── -->
+    <div id="tab-sched" class="hidden">
+      <div class="card">
+        <div class="card-title">Schedule a Download</div>
+        <div class="field"><label>Video or Playlist URL</label>
+          <input class="url-input" id="sched-url" type="url" placeholder="https://youtube.com/watch?v=..." style="width:100%"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Date &amp; Time</div>
+            <input type="datetime-local" id="sched-time" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'Inter',monospace;font-size:11px;outline:none"/>
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Send to</div>
+            <div style="display:flex;gap:6px">
+              <select class="chat-select" id="sched-chat" style="flex:1"><option value="me">📩 Saved Messages</option></select>
+              <button class="btn btn-w btn-sm" onclick="loadChats('sched-chat')">Load</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-w" style="width:100%;padding:12px;margin-top:14px" id="sched-btn" onclick="scheduleDownload()">⏱ Schedule</button>
+      </div>
+      <div class="sec-label">Upcoming &amp; Past</div>
+      <div class="sched-list" id="sched-list">
+        <div style="font-size:10px;color:var(--text3);padding:8px">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ── ANALYTICS ── -->
+    <div id="tab-an" class="hidden">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="slabel">Total</div><div class="sval" id="s-tot">—</div></div>
+        <div class="stat-card"><div class="slabel">Completed</div><div class="sval" style="color:var(--green)" id="s-ok">—</div></div>
+        <div class="stat-card"><div class="slabel">Failed</div><div class="sval" style="color:var(--red)" id="s-fail">—</div></div>
+        <div class="stat-card"><div class="slabel">Sites</div><div class="sval" id="s-sites">—</div></div>
+        <div class="stat-card"><div class="slabel">Data Sent</div><div class="sval" id="s-bytes">—</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card"><h4>By Site</h4><canvas id="ch-sites" height="200"></canvas></div>
+        <div class="chart-card"><h4>Activity</h4><canvas id="ch-days" height="200"></canvas></div>
+      </div>
+      <div class="hist-card">
+        <h4>Download History</h4>
+        <div style="overflow-x:auto">
+          <table class="htable">
+            <thead><tr><th>Title</th><th>Site</th><th>Quality</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="hist-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PLANS ── -->
+    <div id="tab-pay" class="hidden">
+      <div class="bento-grid">
+        <div class="bento-card pro-card">
+          <div class="bento-tag"><span class="plan-badge pro">Pro</span></div>
+          <div class="bento-icon">⚡</div>
+          <div class="bento-label">Monthly</div>
+          <div class="bento-title">VideoFlow Pro</div>
+          <div class="bento-price">₹99 <span>/ month</span></div>
+          <div class="bento-sub">Renews every 30 days.</div>
+          <div class="feature-list">
+            <div class="feature-item">Unlimited downloads</div>
+            <div class="feature-item">Batch + playlist</div>
+            <div class="feature-item">Scheduled downloads</div>
+            <div class="feature-item">Send to any chat</div>
+          </div>
+          <button class="bento-btn pro-btn" onclick="openPayModal('pro')">Pay with Razorpay →</button>
+          <div style="font-size:9px;color:var(--text3);margin-top:8px">🔒 Razorpay · UPI / Cards</div>
+        </div>
+        <div class="bento-card inf-card">
+          <div class="bento-tag"><span class="plan-badge infinity">Pro Plus</span></div>
+          <div class="bento-icon">∞</div>
+          <div class="bento-label">Lifetime</div>
+          <div class="bento-title">VideoFlow Pro Plus</div>
+          <div class="bento-price">₹499 <span>one-time</span></div>
+          <div class="bento-sub">Pay once. Use forever.</div>
+          <div class="feature-list">
+            <div class="feature-item">Everything in Pro</div>
+            <div class="feature-item">Lifetime — no renewal</div>
+            <div class="feature-item">Early feature access</div>
+            <div class="feature-item">Priority support</div>
+          </div>
+          <button class="bento-btn inf-btn" onclick="openPayModal('infinity')">Pay with Razorpay →</button>
+          <div style="font-size:9px;color:var(--text3);margin-top:8px">🔒 Razorpay · UPI / Cards</div>
+        </div>
+        <div class="bento-card full" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <div style="font-size:26px">🏷</div>
+          <div style="flex:1;min-width:160px">
+            <div class="bento-label">Promo Code</div>
+            <div class="bento-title" style="font-size:14px">Have a code?</div>
+            <div class="bento-sub">Apply a promo code to activate instantly.</div>
+          </div>
+          <button class="bento-btn ghost-btn" style="width:auto;padding:10px 20px;margin-top:0" onclick="openPromoModal()">Apply Code →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROFILE ── -->
+    <div id="tab-profile" class="hidden">
+      <div class="profile-bento">
+        <div class="prof-card" style="display:flex;align-items:center;gap:14px">
+          <div style="width:46px;height:46px;border-radius:50%;background:rgba(128,128,128,.12);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0" id="prof-av">?</div>
+          <div>
+            <div class="pc-val" id="prof-name" style="font-size:15px">—</div>
+            <div class="pc-sub" id="prof-phone">—</div>
+            <div class="pc-sub" style="margin-top:3px">Telegram account</div>
+          </div>
+        </div>
+        <div class="prof-card">
+          <div class="pc-label">Current Plan</div>
+          <div class="pc-val" id="prof-plan" style="margin-top:4px">Free</div>
+          <div class="pc-sub" id="prof-expiry">No active subscription</div>
+          <button class="bento-btn ghost-btn" style="margin-top:10px;font-size:10px;padding:7px" onclick="switchTab('pay',document.querySelector('[data-tab=pay]'))">Upgrade →</button>
+        </div>
+        <div class="prof-card">
+          <div class="pc-label">Mobile Number</div>
+          <div class="pc-val" id="prof-mobile">—</div>
+          <div class="pc-sub">Linked Telegram number</div>
+        </div>
+        <div class="prof-card">
+          <div class="pc-label">Subscription Expiry</div>
+          <div class="pc-val" id="prof-renewal">—</div>
+          <div class="pc-sub" id="prof-renewal-sub">—</div>
+        </div>
+        <div class="prof-card">
+          <div class="pc-label">Member Since</div>
+          <div class="pc-val" id="prof-signin">—</div>
+          <div class="pc-sub">First sign in</div>
+        </div>
+        <div class="prof-card">
+          <div class="pc-label">Total Downloads</div>
+          <div class="pc-val" id="prof-dlcount">—</div>
+          <div class="pc-sub">Completed</div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info"><h4>Appearance</h4><p>Dark / light mode</p></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text3)">
+          <span>Light</span>
+          <button class="toggle" id="theme-toggle-btn" onclick="toggleTheme()"><div class="toggle-knob"></div></button>
+          <span style="color:var(--text)">Dark</span>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info"><h4>Sign out</h4><p>Log out of your Telegram session</p></div>
+        <button class="btn btn-danger" onclick="logout()">Sign out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAY MODAL -->
+<div class="modal-overlay hidden" id="pay-modal" onclick="if(event.target===this)closePayModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closePayModal()">✕</button>
+    <div class="bento-icon" id="pm-icon" style="margin-bottom:6px">⚡</div>
+    <div class="modal-title" id="pm-title">VideoFlow Pro</div>
+    <div class="modal-sub" id="pm-sub">Monthly · ₹99/month</div>
+    <div class="pay-total"><span class="pay-total-label">Total due today</span><span class="pay-total-amount" id="pm-amount">₹99</span></div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Promo Code</div>
+      <div class="promo-row">
+        <input class="promo-input" id="pm-promo-inp" type="text" placeholder="Enter promo code (optional)"/>
+        <button class="promo-apply" onclick="applyPayPromo()">Apply</button>
+      </div>
+      <div class="promo-result" id="pm-promo-result"></div>
+    </div>
+    <hr class="modal-divider"/>
+    <div class="rzp-block">
+      <div class="rzp-block-title">💳 Pay via Razorpay</div>
+      <p>Choose your UPI app to complete payment.</p>
+      <div class="upi-grid">
+        <button class="upi-btn" onclick="initiateRzp()">Google Pay</button>
+        <button class="upi-btn" onclick="initiateRzp()">PhonePe</button>
+        <button class="upi-btn" onclick="initiateRzp()">Paytm</button>
+        <button class="upi-btn" onclick="initiateRzp()">Other UPI</button>
+      </div>
+      <button class="bento-btn" style="background:var(--text);color:var(--bg);margin-top:4px" onclick="initiateRzp()">Pay Now →</button>
+    </div>
+    <div style="text-align:center;font-size:9px;color:var(--text3)">🔒 256-bit SSL · Razorpay</div>
+  </div>
+</div>
+
+<!-- PROMO MODAL -->
+<div class="modal-overlay hidden" id="promo-modal" onclick="if(event.target===this)closePromoModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closePromoModal()">✕</button>
+    <div class="bento-icon" style="margin-bottom:6px">🏷</div>
+    <div class="modal-title">Apply Promo Code</div>
+    <div class="modal-sub">Enter your code to activate a plan instantly.</div>
+    <div class="promo-row">
+      <input class="promo-input" id="promo-inp" type="text" placeholder="Enter your code" autocomplete="off" spellcheck="false" oninput="clearPromoResult()"/>
+      <button class="promo-apply" onclick="applyPromoCode()">Apply</button>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:14px">Codes are case-sensitive.</div>
+    <div class="promo-result" id="promo-result"></div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toasts"></div>
+
+<script>
+const TOKEN_KEY='vf_token',PHONE_KEY='vf_phone',SESSION_KEY='vf_session',PLAN_KEY='vf_plan',SIGNIN_KEY='vf_first_signin';
+let token=localStorage.getItem(TOKEN_KEY)||'',selFmt=null,vidMeta=null,currentUser=null,payModalType='pro';
+let cSites=null,cDays=null,pendingPhone=localStorage.getItem(PHONE_KEY)||'',queueTimer=null;
+// Download tab state — declared at top level to avoid temporal dead zone
+let ytMeta=null,ytSelFmt=null,ytDlId=null,ytPollTimer=null;
+let otherMeta=null,otherSelFmt=null,otherDlId=null,otherPollTimer=null;
+
+const PROMO_CODES={
+  'nikshep99':{plan:'infinity',label:'Pro Plus',badge:'infinity',price:'₹499 one-time',renewal:'∞ Lifetime',msg:'🎉 Pro Plus activated — lifetime access, no renewal ever.'},
+  'PROMONTH': {plan:'pro',    label:'Pro',      badge:'pro',     price:'₹99/month',   renewal:'Monthly',     msg:'✅ VideoFlow Pro activated.'}
+};
+
+// ── THEME ─────────────────────────────────────────────────────────────
+function getTheme(){return localStorage.getItem('vf_theme')||'dark';}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);localStorage.setItem('vf_theme',t);
+  const b=document.getElementById('theme-btn');if(b) b.textContent=t==='dark'?'☀':'☾';
+  const tb=document.getElementById('theme-toggle-btn');if(tb) tb.classList.toggle('on',t==='dark');
+}
+function toggleTheme(){applyTheme(getTheme()==='dark'?'light':'dark');}
+applyTheme(getTheme());
+
+// ── BOOT ──────────────────────────────────────────────────────────────
+(async()=>{
+  if(token){
+    try{const r=await fetch('/api/vf/status',{headers:{Authorization:`Bearer ${token}`}});
+      if(r.ok){const d=await r.json();if(d.ok&&d.user){showApp(d.user);return;}}
+    }catch(e){}
+    localStorage.removeItem(TOKEN_KEY);token='';
+  }
+  const sp=localStorage.getItem(PHONE_KEY),ss=localStorage.getItem(SESSION_KEY);
+  if(sp&&ss){
+    try{const r=await fetch('/api/auth/verify-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:sp,session:ss})});
+      if(r.ok){const d=await r.json();if(d.ok&&d.token){token=d.token;localStorage.setItem(TOKEN_KEY,token);showApp(d.user);return;}}
+    }catch(e){}
+  }
+})();
+
+function showApp(user){
+  currentUser=user;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  document.getElementById('user-area').classList.remove('hidden');
+  const name=user.name||user.first_name||'';
+  document.getElementById('uname').textContent=name;
+  document.getElementById('uav').textContent=(name||'?')[0].toUpperCase();
+  if(!localStorage.getItem(SIGNIN_KEY)) localStorage.setItem(SIGNIN_KEY,new Date().toISOString());
+  updatePlanUI();
+  fetch('/api/vf/analytics',{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json()).then(d=>{
+    const el=document.getElementById('prof-dlcount');if(el&&d.stats) el.textContent=d.stats.completed||0;
+  }).catch(()=>{});
+  startQueuePoll();
+}
+
+async function logout(){
+  if(token) await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})}).catch(()=>{});
+  [TOKEN_KEY,PHONE_KEY,SESSION_KEY].forEach(k=>localStorage.removeItem(k));location.reload();
+}
+
+// ── PLAN UI ───────────────────────────────────────────────────────────
+function getCurrentPlan(){return JSON.parse(localStorage.getItem(PLAN_KEY)||'null');}
+function updatePlanUI(){
+  const plan=getCurrentPlan();
+  const badge=document.getElementById('nav-plan-badge');
+  if(badge){badge.className='plan-badge '+(plan?plan.badge:'free');badge.textContent=plan?plan.label:'Free';}
+  const phone=localStorage.getItem(PHONE_KEY)||(currentUser&&currentUser.phone)||'—';
+  const name=(currentUser&&(currentUser.name||currentUser.first_name))||'—';
+  setEl('prof-name',name);setEl('prof-phone',phone);setEl('prof-mobile',phone);
+  setEl('prof-signin',localStorage.getItem(SIGNIN_KEY)?fmtDate(localStorage.getItem(SIGNIN_KEY)):'—');
+  const av=document.getElementById('prof-av');if(av) av.textContent=(name||'?')[0].toUpperCase();
+  if(plan){
+    const isInf=plan.plan==='infinity';
+    setEl('prof-plan',plan.label);setEl('prof-expiry',isInf?'∞ Lifetime':plan.price);
+    setEl('prof-renewal',isInf?'Never':'Next: '+calcNextRenewal(plan.activatedAt));
+    setEl('prof-renewal-sub',isInf?'Lifetime — no renewal':'Monthly');
+  } else {
+    setEl('prof-plan','Free');setEl('prof-expiry','No active subscription');
+    setEl('prof-renewal','—');setEl('prof-renewal-sub','No active plan');
+  }
+}
+function setEl(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function calcNextRenewal(iso){
+  if(!iso) return '—';
+  const d=new Date(iso);d.setMonth(d.getMonth()+1);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────
+function switchTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  ['dl','batch','queue','sched','an','pay','profile'].forEach(k=>{
+    const el=document.getElementById('tab-'+k);if(el) el.classList.toggle('hidden',k!==name);
+  });
+  if(name==='an') loadAnalytics();
+  if(name==='profile') updatePlanUI();
+  if(name==='queue') loadQueue();
+  if(name==='sched') loadSchedules();
+}
+
+// ── CHAT TARGET ───────────────────────────────────────────────────────
+async function loadChats(selId){
+  const sel=document.getElementById(selId);if(!sel) return;
+  sel.innerHTML='<option>Loading…</option>';
+  try{
+    const r=await fetch('/api/vf/chats',{headers:{Authorization:`Bearer ${token}`}});
+    const d=await r.json();if(!d.ok) throw new Error(d.error);
+    sel.innerHTML='<option value="me">📩 Saved Messages (default)</option>';
+    (d.chats||[]).forEach(c=>{
+      const o=document.createElement('option');o.value=c.id;
+      o.textContent=(c.type==='dm'?'👤 ':'👥 ')+c.name;sel.appendChild(o);
+    });
+    toast('ok','Chats loaded',`${d.chats.length} available`);
+  }catch(e){sel.innerHTML='<option value="me">📩 Saved Messages</option>';toast('err','Failed',e.message);}
+}
+
+// ── DRAG & DROP ───────────────────────────────────────────────────────
+const dz=document.getElementById('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('over');
+  const t=e.dataTransfer.getData('text/plain')||e.dataTransfer.getData('text/uri-list');
+  if(t){document.getElementById('url-inp').value=t.trim();fetchFormats();}
+});
+dz.addEventListener('click',()=>document.getElementById('url-inp').focus());
+document.getElementById('url-inp').addEventListener('paste',()=>setTimeout(fetchFormats,120));
+
+// ── FETCH FORMATS ─────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// DOWNLOAD TABS — YouTube vs Other Sites
+// ═══════════════════════════════════════════════════════════════
+
+// ytMeta, otherMeta etc declared at top of script
+
+function setSiteTab(tab) {
+  document.getElementById('stab-yt').classList.toggle('active', tab === 'yt');
+  document.getElementById('stab-other').classList.toggle('active', tab === 'other');
+  document.getElementById('panel-yt').style.display    = tab === 'yt'    ? '' : 'none';
+  document.getElementById('panel-other').style.display = tab === 'other' ? '' : 'none';
+}
+
+function onYtUrlInput() {
+  const url = document.getElementById('yt-url').value.trim();
+  if (url.startsWith('http') && (url.includes('youtube') || url.includes('youtu.be'))) {
+    ytFetch();
+  }
+}
+
+// ── YOUTUBE FETCH ─────────────────────────────────────────────
+async function ytFetch() {
+  const url = document.getElementById('yt-url').value.trim();
+  if (!url || !url.startsWith('http')) return;
+  const btn = document.getElementById('yt-fetch-btn');
+  const txt = document.getElementById('yt-fetch-txt');
+  btn.disabled = true; txt.innerHTML = '<span class="spin"></span>';
+  document.getElementById('yt-info').style.display = 'none';
+  document.getElementById('yt-progress-card').style.display = 'none';
+  try {
+    const r = await fetch(`/api/vf/formats?url=${encodeURIComponent(url)}`, {headers: {Authorization: `Bearer ${token}`}});
+    const d = await r.json();
+    if (!r.ok) { toast('err', 'Failed', d.error || 'Could not fetch'); return; }
+    ytMeta = d; ytSelFmt = null;
+    setEl('yt-title', d.title || url);
+    setEl('yt-dur',   d.duration ? fmtDur(d.duration) : '');
+    setEl('yt-upl',   d.uploader || '');
+    const th = document.getElementById('yt-thumb');
+    th.src = d.thumbnail || ''; th.style.display = d.thumbnail ? '' : 'none';
+    buildQGrid('yt-qgrid', d.formats || [], (fmt) => ytStartDl(fmt));
+    document.getElementById('yt-info').style.display = '';
+  } catch(e) { toast('err', 'Error', e.message); }
+  finally { btn.disabled = false; txt.textContent = 'Fetch'; }
+}
+
+function ytStartDl(fmt) {
+  ytSelFmt = fmt;
+}
+
+async function ytDlBtnClick() {
+  if (!ytSelFmt) return;
+  const url  = document.getElementById('yt-url').value.trim();
+  const chat = document.getElementById('yt-chat').value || 'me';
+  const btn  = document.getElementById('yt-dl-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Queuing…';
+  markQBtnDownloading('yt-qgrid', ytSelFmt);
+  showProgress('yt', `Queuing ${ytSelFmt.resolution}…`, 0);
+  try {
+    const r = await fetch('/api/vf/download', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+      body: JSON.stringify({url, format_id: ytSelFmt.format_id,
+        sort_string: ytSelFmt.sort_string || '',
+        height: ytSelFmt.height || 480, quality_label: ytSelFmt.resolution,
+        title: ytMeta?.title, chat_target: chat})
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) { toast('err', 'Failed', d.error); resetProgress('yt'); }
+    else { ytDlId = d.downloadId; pollProgress('yt', ytDlId); }
+  } catch(e) { toast('err', 'Error', e.message); resetProgress('yt'); }
+  finally { btn.disabled = false; btn.innerHTML = '📤 Download & Send to Telegram'; }
+}
+
+// ── OTHER SITES FETCH ─────────────────────────────────────────
+async function otherFetch() {
+  const url = document.getElementById('other-url').value.trim();
+  if (!url || !url.startsWith('http')) return;
+  const btn = document.getElementById('other-fetch-btn');
+  const txt = document.getElementById('other-fetch-txt');
+  btn.disabled = true; txt.innerHTML = '<span class="spin"></span>';
+  document.getElementById('other-info').style.display = 'none';
+  document.getElementById('other-progress-card').style.display = 'none';
+  try {
+    const r = await fetch(`/api/vf/formats?url=${encodeURIComponent(url)}`, {headers: {Authorization: `Bearer ${token}`}});
+    const d = await r.json();
+    if (!r.ok) { toast('err', 'Failed', d.error || 'Could not fetch'); return; }
+    otherMeta = d; otherSelFmt = null;
+    setEl('other-title', d.title || url);
+    setEl('other-site',  d.site || '');
+    setEl('other-dur',   d.duration ? fmtDur(d.duration) : '');
+    const th = document.getElementById('other-thumb');
+    th.src = d.thumbnail || ''; th.style.display = d.thumbnail ? '' : 'none';
+    buildQGrid('other-qgrid', d.formats || [], (fmt) => otherStartDl(fmt));
+    document.getElementById('other-info').style.display = '';
+  } catch(e) { toast('err', 'Error', e.message); }
+  finally { btn.disabled = false; txt.textContent = 'Fetch'; }
+}
+
+let currentAR = '16:9';
+function setAR(ratio, btn) {
+  currentAR = ratio;
+  document.querySelectorAll('.ar-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function otherStartDl(fmt) {
+  // Just store selected format — download starts when button is clicked
+  otherSelFmt = fmt;
+}
+
+async function otherDlBtnClick() {
+  if (!otherSelFmt) return;
+  const url  = document.getElementById('other-url').value.trim();
+  const chat = document.getElementById('other-chat').value || 'me';
+  const btn  = document.getElementById('other-dl-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Queuing…';
+  markQBtnDownloading('other-qgrid', otherSelFmt);
+  showProgress('other', `Queuing ${otherSelFmt.resolution} · ${currentAR}…`, 0);
+  try {
+    const r = await fetch('/api/vf/download', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+      body: JSON.stringify({url, format_id: otherSelFmt.format_id,
+        sort_string: otherSelFmt.sort_string || '',
+        height: otherSelFmt.height || 480, quality_label: otherSelFmt.resolution,
+        title: otherMeta?.title, chat_target: chat, aspect_ratio: currentAR})
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) { toast('err', 'Failed', d.error); resetProgress('other'); }
+    else { otherDlId = d.downloadId; pollProgress('other', otherDlId); }
+  } catch(e) { toast('err', 'Error', e.message); resetProgress('other'); }
+  finally { btn.disabled = false; btn.innerHTML = '📤 Download & Send to Telegram'; }
+}
+
+// ── SHARED HELPERS ────────────────────────────────────────────
+function buildQGrid(gridId, formats, onSelect) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  // determine which dl button to enable
+  const prefix = gridId.startsWith('yt') ? 'yt' : 'other';
+  const dlBtn  = document.getElementById(prefix + '-dl-btn');
+
+  formats.forEach((f, i) => {
+    const el = document.createElement('button');
+    el.className = 'qbtn' + (i === 0 ? ' sel' : '');
+    el.dataset.fmtId = f.format_id;
+    const sz = f.filesize ? fmtBytes(f.filesize) : '?';
+    const szlbl = ({exact:'exact', approx:'approx', est:'est'})[f.size_source] || '';
+    el.innerHTML = `<span class="qres">${f.resolution} <span class="qext">MP4</span></span><span class="qsize">${sz}</span><span class="qsizelabel">${szlbl}</span>`;
+    el.onclick = () => {
+      grid.querySelectorAll('.qbtn').forEach(b => b.classList.remove('sel'));
+      el.classList.add('sel');
+      onSelect(f);  // store selected fmt
+      // enable download button
+      if (dlBtn) { dlBtn.disabled = false; dlBtn.style.opacity = '1'; dlBtn.style.cursor = 'pointer'; }
+    };
+    // Auto-select first format and enable button
+    if (i === 0) {
+      onSelect(f);
+      if (dlBtn) { dlBtn.disabled = false; dlBtn.style.opacity = '1'; dlBtn.style.cursor = 'pointer'; }
+    }
+    grid.appendChild(el);
+  });
+}
+
+function markQBtnDownloading(gridId, fmt) {
+  const grid = document.getElementById(gridId);
+  grid.querySelectorAll('.qbtn').forEach(b => {
+    b.classList.remove('sel', 'downloading');
+    if (b.dataset.fmtId === fmt.format_id) b.classList.add('downloading');
+  });
+}
+
+// ── MOTIVATIONAL QUOTES ──────────────────────────────────────────────
+const QUOTES = [
+  {q:"The secret of getting ahead is getting started.", a:"Mark Twain"},
+  {q:"It always seems impossible until it's done.", a:"Nelson Mandela"},
+  {q:"Don't watch the clock; do what it does. Keep going.", a:"Sam Levenson"},
+  {q:"Believe you can and you're halfway there.", a:"Theodore Roosevelt"},
+  {q:"Success is not final, failure is not fatal: it is the courage to continue that counts.", a:"Winston Churchill"},
+  {q:"The only way to do great work is to love what you do.", a:"Steve Jobs"},
+  {q:"In the middle of every difficulty lies opportunity.", a:"Albert Einstein"},
+  {q:"Do what you can, with what you have, where you are.", a:"Theodore Roosevelt"},
+  {q:"Hard work beats talent when talent doesn't work hard.", a:"Tim Notke"},
+  {q:"The future belongs to those who believe in the beauty of their dreams.", a:"Eleanor Roosevelt"},
+  {q:"It does not matter how slowly you go as long as you do not stop.", a:"Confucius"},
+  {q:"Start where you are. Use what you have. Do what you can.", a:"Arthur Ashe"},
+  {q:"You miss 100% of the shots you don't take.", a:"Wayne Gretzky"},
+  {q:"Whether you think you can or think you can't, you're right.", a:"Henry Ford"},
+  {q:"The only limit to our realization of tomorrow is our doubts of today.", a:"Franklin D. Roosevelt"},
+  {q:"Act as if what you do makes a difference. It does.", a:"William James"},
+  {q:"Opportunities don't happen, you create them.", a:"Chris Grosser"},
+  {q:"Success usually comes to those who are too busy to be looking for it.", a:"Henry David Thoreau"},
+  {q:"Don't be afraid to give up the good to go for the great.", a:"John D. Rockefeller"},
+  {q:"I find that the harder I work, the more luck I seem to have.", a:"Thomas Jefferson"},
+];
+
+let _quoteTimers = {};
+
+function _startQuotes(prefix) {
+  _stopQuotes(prefix);
+  let idx = Math.floor(Math.random() * QUOTES.length);
+  function show() {
+    const q = QUOTES[idx % QUOTES.length];
+    const el = document.getElementById(`${prefix}-prog-quote`);
+    const au = document.getElementById(`${prefix}-prog-quote-author`);
+    if (!el || !au) return;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = '"' + q.q + '"';
+      au.textContent = '— ' + q.a;
+      el.style.opacity = '1';
+    }, 300);
+    idx++;
+  }
+  show();
+  _quoteTimers[prefix] = setInterval(show, 6000);
+}
+
+function _stopQuotes(prefix) {
+  if (_quoteTimers[prefix]) { clearInterval(_quoteTimers[prefix]); delete _quoteTimers[prefix]; }
+  setEl(`${prefix}-prog-quote`, '');
+  setEl(`${prefix}-prog-quote-author`, '');
+}
+
+function showProgress(prefix, phase, pct) {
+  const card = document.getElementById(`${prefix}-progress-card`);
+  card.style.display = '';
+  setEl(`${prefix}-prog-title`, 'downloading.');
+  setEl(`${prefix}-prog-sub`,   phase);
+  setEl(`${prefix}-prog-phase`, '');
+  setEl(`${prefix}-prog-pct`,   pct + '%');
+  setEl(`${prefix}-prog-speed`, '');
+  setEl(`${prefix}-prog-size`,  '');
+  setEl(`${prefix}-prog-eta`,   '');
+  const bar = document.getElementById(`${prefix}-prog-bar`);
+  if (bar) { bar.style.width = pct + '%'; bar.style.background = 'var(--text)'; }
+  _startQuotes(prefix);
+}
+
+function updateProgress(prefix, dl) {
+  const pct   = dl.progress || 0;
+  const phase = dl.eta || '';
+  const speed = dl.speed || '';
+  const size  = dl.total_size_str || '';
+
+  let phaseLabel = '';
+  if (pct <= 79)      phaseLabel = 'DOWNLOADING';
+  else if (pct <= 97) phaseLabel = 'ENCODING FOR TELEGRAM';
+  else if (pct <= 99) phaseLabel = 'UPLOADING TO TELEGRAM';
+  else                phaseLabel = 'DONE';
+
+  const bar = document.getElementById(`${prefix}-prog-bar`);
+  if (bar) bar.style.width = pct + '%';
+
+  const title = dl.title && dl.title !== dl.url ? dl.title : 'downloading.';
+  setEl(`${prefix}-prog-title`, title);
+  setEl(`${prefix}-prog-sub`,   phaseLabel.toLowerCase() + '.');
+  setEl(`${prefix}-prog-pct`,   pct + '%');
+  setEl(`${prefix}-prog-speed`, speed || '');
+  setEl(`${prefix}-prog-size`,  size  || '');
+  setEl(`${prefix}-prog-eta`,   (phase && !phase.includes('Encod') && !phase.includes('Upload') && !phase.includes('Merg')) ? 'ETA ' + phase : '');
+  setEl(`${prefix}-prog-phase`, phaseLabel);
+}
+
+function resetProgress(prefix) {
+  _stopQuotes(prefix);
+  document.getElementById(`${prefix}-progress-card`).style.display = 'none';
+  const gridId = prefix === 'yt' ? 'yt-qgrid' : 'other-qgrid';
+  document.getElementById(gridId)?.querySelectorAll('.qbtn').forEach(b => b.classList.remove('downloading'));
+}
+
+function pollProgress(prefix, dlId) {
+  // Clear any existing timer
+  if (prefix === 'yt' && ytPollTimer)    clearInterval(ytPollTimer);
+  if (prefix === 'other' && otherPollTimer) clearInterval(otherPollTimer);
+
+  const timer = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/vf/status/${dlId}`, {headers: {Authorization: `Bearer ${token}`}});
+      const dl = await r.json();
+      updateProgress(prefix, dl);
+
+      if (dl.status === 'completed') {
+        clearInterval(timer);
+        _stopQuotes(prefix);
+        const bar = document.getElementById(`${prefix}-prog-bar`);
+        if (bar) { bar.style.width = '100%'; bar.style.background = 'var(--green)'; }
+        setEl(`${prefix}-prog-title`, 'done.');
+        setEl(`${prefix}-prog-sub`,   'sent to telegram.');
+        setEl(`${prefix}-prog-pct`,   '100%');
+        setEl(`${prefix}-prog-phase`, 'DELIVERED');
+        setEl(`${prefix}-prog-speed`, '');
+        setEl(`${prefix}-prog-eta`,   '');
+        toast('ok', '✅ Done!', 'Video sent to Telegram Saved Messages');
+        setTimeout(() => resetProgress(prefix), 5000);
+      }
+      if (dl.status === 'failed') {
+        clearInterval(timer);
+        showProgress(prefix, '❌ ' + (dl.error || 'Download failed'), 0);
+        const bar = document.getElementById(`${prefix}-prog-bar`);
+        if (bar) bar.style.background = 'var(--red)';
+        setEl(`${prefix}-prog-phase`, 'FAILED');
+        toast('err', 'Failed', dl.error || 'Download failed');
+        setTimeout(() => resetProgress(prefix), 5000);
+      }
+    } catch(e) {}
+  }, 1500);  // poll every 1.5s for snappy updates
+
+  if (prefix === 'yt')    ytPollTimer    = timer;
+  if (prefix === 'other') otherPollTimer = timer;
+}
+
+// Keep old fetchFormats/startDl as aliases so batch/queue still work
+async function fetchFormats() { ytFetch(); }
+function startDl() {}
+
+// ── PLAYLIST ──────────────────────────────────────────────────────────
+// ── PLAYLIST ──────────────────────────────────────────────────────────
+async function fetchPlaylist(){
+  const url=document.getElementById('playlist-inp').value.trim();if(!url) return;
+  const btn=document.getElementById('pl-btn'),txt=document.getElementById('pl-txt');
+  btn.disabled=true;txt.innerHTML='<span class="spin"></span>';
+  try{
+    const r=await fetch(`/api/vf/playlist?url=${encodeURIComponent(url)}`,{headers:{Authorization:`Bearer ${token}`}});
+    const d=await r.json();if(!d.ok) throw new Error(d.error||'Failed');
+    setEl('pl-count',`${d.count} videos found`);
+    const el=document.getElementById('pl-entries');el.innerHTML='';
+    (d.entries||[]).forEach((e,i)=>{
+      el.innerHTML+=`<div class="pe-item"><span class="pe-num">${i+1}</span><span class="pe-title">${esc(e.title||e.url)}</span></div>`;
+    });
+    document.getElementById('playlist-info').classList.remove('hidden');
+    toast('ok','Playlist loaded',`${d.count} videos ready`);
+  }catch(e){toast('err','Playlist Error',e.message);}
+  finally{btn.disabled=false;txt.textContent='Load Playlist';}
+}
+
+async function startBatch(){
+  const playlistUrl=document.getElementById('playlist-inp').value.trim();
+  const batchText=document.getElementById('batch-urls').value.trim();
+  const chatTarget=document.getElementById('batch-chat-target').value||'me';
+  const urls=batchText?batchText.split('\n').map(u=>u.trim()).filter(u=>u.startsWith('http')):[];
+  if(!playlistUrl&&!urls.length){toast('err','Nothing to queue','Add a playlist URL or paste video URLs');return;}
+  const body={urls,height:480,chat_target:chatTarget};
+  if(playlistUrl) body.playlist_url=playlistUrl;
+  const btn=document.getElementById('batch-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> Queuing…';
+  try{
+    const r=await fetch('/api/vf/batch',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)});
+    const d=await r.json();if(!d.ok) throw new Error(d.error||'Failed');
+    document.getElementById('batch-result-txt').textContent=`✅ Queued ${d.queued} downloads. Check Queue tab for progress.`;
+    document.getElementById('batch-result').classList.remove('hidden');
+    document.getElementById('playlist-inp').value='';
+    document.getElementById('batch-urls').value='';
+    document.getElementById('playlist-info').classList.add('hidden');
+    toast('ok',`${d.queued} queued!`,'Downloading at 480p…');
+    setTimeout(()=>switchTab('queue',document.querySelector('[data-tab=queue]')),1200);
+  }catch(e){toast('err','Batch Error',e.message);}
+  finally{btn.disabled=false;btn.innerHTML='⚡ Queue All';}
+}
+
+// ── QUEUE ─────────────────────────────────────────────────────────────
+function startQueuePoll(){
+  if(queueTimer) clearInterval(queueTimer);
+  queueTimer=setInterval(()=>{
+    const qt=document.getElementById('tab-queue');
+    if(qt&&!qt.classList.contains('hidden')) loadQueue();
+  },3000);
+}
+
+async function loadQueue(){
+  try{
+    const r=await fetch('/api/vf/queue',{headers:{Authorization:`Bearer ${token}`}});
+    const d=await r.json();if(!d.ok) return;
+    const items=d.queue||[];
+    const active=items.filter(i=>['downloading','pending'].includes(i.status)).length;
+    const done=items.filter(i=>i.status==='completed').length;
+    setEl('queue-summary',`${items.length} total · ${active} active · ${done} done`);
+    const list=document.getElementById('full-queue-list');
+    if(!items.length){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:11px">No downloads yet</div>';return;}
+    list.innerHTML=items.map(q=>renderQueueItem(q)).join('');
+  }catch(e){}
+}
+
+function renderQueueItem(q){
+  const pct=q.progress||0;
+  const active=['downloading','pending'].includes(q.status)&&pct>0;
+  const chatBadge=q.chat_target&&q.chat_target!=='me'?`<span class="qchat">→ chat</span>`:'';
+  const bar=active?`<div class="qprogbar"><div class="qprogfill" style="width:${pct}%"></div></div>
+    <div class="qproginfo"><span>${pct}%${q.eta?` · ${esc(q.eta)}`:''}</span><span>${q.speed?esc(q.speed):''}</span></div>`:'';
+  const errMsg=q.status==='failed'?`<div style="font-size:9px;color:var(--red);margin-top:3px">${esc(q.error||'Failed')}</div>`:'';
+  return `<div class="queue-item">
+    <div class="qs ${q.status}"></div>
+    <div class="qi">
+      <div class="qtitle">${esc(q.title&&q.title!==q.url?q.title:'Downloading…')}</div>
+      <div class="qurl">${esc(q.url)}</div>
+      <div class="qmeta">${esc(q.quality||'480p')} MP4 · ${q.status}</div>
+      ${bar}${errMsg}
+    </div>
+    ${chatBadge}
+  </div>`;
+}
+
+// ── SCHEDULE ──────────────────────────────────────────────────────────
+async function scheduleDownload(){
+  const url=document.getElementById('sched-url').value.trim();
+  const timeVal=document.getElementById('sched-time').value;
+  const chatTarget=document.getElementById('sched-chat').value||'me';
+  if(!url||!timeVal){toast('err','Missing fields','Enter a URL and pick a date/time');return;}
+  const runAt=new Date(timeVal).toISOString();
+  const btn=document.getElementById('sched-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> Scheduling…';
+  try{
+    const r=await fetch('/api/vf/schedule',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+      body:JSON.stringify({url,run_at:runAt,height:480,chat_target:chatTarget})});
+    const d=await r.json();if(!d.ok) throw new Error(d.error||'Failed');
+    toast('ok','Scheduled!',`Download queued for ${new Date(runAt).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}`);
+    document.getElementById('sched-url').value='';
+    document.getElementById('sched-time').value='';
+    loadSchedules();
+  }catch(e){toast('err','Schedule Error',e.message);}
+  finally{btn.disabled=false;btn.innerHTML='⏱ Schedule';}
+}
+
+async function loadSchedules(){
+  try{
+    const r=await fetch('/api/vf/schedules',{headers:{Authorization:`Bearer ${token}`}});
+    const d=await r.json();
+    const list=document.getElementById('sched-list');
+    if(!d.ok||!d.schedules.length){list.innerHTML='<div style="font-size:10px;color:var(--text3);padding:8px">No scheduled downloads</div>';return;}
+    list.innerHTML=d.schedules.map(s=>`
+      <div class="sched-item">
+        <div class="sched-dot ${s.status}"></div>
+        <div class="sched-info">
+          <div class="sched-url">${esc(s.url)}</div>
+          <div class="sched-time">⏱ ${fmtDate(s.run_at)} · ${s.status}</div>
+        </div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────────────────
+async function loadAnalytics(){
+  try{
+    const r=await fetch('/api/vf/analytics',{headers:{Authorization:`Bearer ${token}`}});
+    const{stats,bySite,downloads}=await r.json();
+    setEl('s-tot',stats.total||0);setEl('s-ok',stats.completed||0);
+    setEl('s-fail',stats.failed||0);setEl('s-sites',stats.unique_sites||0);
+    setEl('s-bytes',fmtBytes(stats.total_bytes||0));
+    drawSites(bySite);renderHist(downloads||[]);
+  }catch(e){toast('err','Analytics Error',e.message);}
+}
+function drawSites(d){
+  if(cSites) cSites.destroy();
+  const dark=getTheme()==='dark';
+  cSites=new Chart(document.getElementById('ch-sites'),{type:'doughnut',
+    data:{labels:d.map(s=>s.site),datasets:[{data:d.map(s=>s.count),backgroundColor:dark?['#fff','#888','#555','#333','#222']:['#111','#555','#888','#aaa','#ccc'],borderWidth:0}]},
+    options:{plugins:{legend:{labels:{color:dark?'rgba(255,255,255,.4)':'rgba(0,0,0,.4)',font:{family:'Inter',size:10}}}},cutout:'60%'}});
+}
+function renderHist(dl){
+  const b=document.getElementById('hist-body');
+  if(!dl.length){b.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">No downloads yet</td></tr>';return;}
+  b.innerHTML=dl.map(d=>`<tr>
+    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(d.title)}">${esc(d.title||'—')}</td>
+    <td><span class="vbadge">${esc(d.site||'?')}</span></td>
+    <td style="color:var(--text2)">${esc(d.quality||'—')}</td>
+    <td><span class="pill ${d.status}">${d.status}</span></td>
+    <td style="color:var(--text3);font-size:9px">${fmtDate(d.created_at)}</td>
+  </tr>`).join('');
+}
+
+// ── PAY / PROMO ───────────────────────────────────────────────────────
+function openPayModal(type){
+  payModalType=type;const isInf=type==='infinity';
+  setEl('pm-icon',isInf?'∞':'⚡');setEl('pm-title',isInf?'VideoFlow Pro Plus':'VideoFlow Pro');
+  setEl('pm-sub',isInf?'Lifetime · one-time':'Monthly · ₹99/month');
+  setEl('pm-amount',isInf?'₹499':'₹99');
+  const pi=document.getElementById('pm-promo-inp');pi.value='';pi.placeholder=isInf?'Try: nikshep99':'Promo code (optional)';
+  const pr=document.getElementById('pm-promo-result');pr.className='promo-result';pr.innerHTML='';
+  document.getElementById('pay-modal').classList.remove('hidden');
+}
+function closePayModal(){document.getElementById('pay-modal').classList.add('hidden');}
+function applyPayPromo(){
+  const code=document.getElementById('pm-promo-inp').value.trim();
+  const match=PROMO_CODES[code];const el=document.getElementById('pm-promo-result');
+  if(!match){el.className='promo-result err show';el.innerHTML='❌ Invalid promo code.';return;}
+  localStorage.setItem(PLAN_KEY,JSON.stringify({...match,activatedAt:new Date().toISOString(),code}));
+  updatePlanUI();el.className='promo-result ok show';el.innerHTML=match.msg;
+  setEl('pm-amount','₹0');toast('ok','Promo Applied!',match.label+' activated');
+}
+function initiateRzp(){
+  if(document.getElementById('pm-promo-result').classList.contains('ok')){
+    toast('ok','Already Active','Plan is active via promo code!');closePayModal();return;
+  }
+  toast('inf','Razorpay','Add your Razorpay key ID in backend to enable payments');closePayModal();
+}
+
+function openPromoModal(){
+  document.getElementById('promo-inp').value='';
+  const r=document.getElementById('promo-result');r.className='promo-result';r.innerHTML='';
+  document.getElementById('promo-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('promo-inp').focus(),100);
+}
+function closePromoModal(){document.getElementById('promo-modal').classList.add('hidden');}
+function clearPromoResult(){const r=document.getElementById('promo-result');r.className='promo-result';r.innerHTML='';}
+function applyPromoCode(){
+  const code=document.getElementById('promo-inp').value.trim();
+  const match=PROMO_CODES[code];const el=document.getElementById('promo-result');
+  if(!match){el.className='promo-result err show';el.innerHTML='❌ Invalid code.';return;}
+  localStorage.setItem(PLAN_KEY,JSON.stringify({...match,activatedAt:new Date().toISOString(),code}));
+  updatePlanUI();el.className='promo-result ok show';el.innerHTML=match.msg;
+  toast('ok','Plan Activated!',match.label+' is now active');
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────
+function setStep(s){
+  ['phone','otp','2fa','done'].forEach(x=>document.getElementById('s-'+x).classList.toggle('hidden',x!==s));
+  const map={phone:1,otp:2,'2fa':2,done:3};
+  [1,2,3].forEach(i=>{const d=document.getElementById('d'+i),cur=map[s]||1;d.className='dot'+(i<cur?' done':i===cur?' active':'');});
+}
+function showErr(id,msg){const el=document.getElementById('e-'+id);el.textContent=msg;el.classList.add('show');}
+function clearErr(id){document.getElementById('e-'+id).classList.remove('show');}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return;
+  if(!document.getElementById('s-phone').classList.contains('hidden')) sendCode();
+  else if(!document.getElementById('s-otp').classList.contains('hidden')) verifyCode();
+  else if(!document.getElementById('s-2fa').classList.contains('hidden')) verify2FA();
+});
+async function sendCode(){
+  const phone=document.getElementById('inp-phone').value.trim();if(!phone) return;
+  clearErr('phone');const btn=document.getElementById('btn-phone');btn.disabled=true;btn.textContent='Sending…';
+  try{
+    const r=await fetch('/api/auth/send-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
+    const d=await r.json();if(!r.ok||!d.ok){showErr('phone',d.error||'Failed');return;}
+    pendingPhone=phone;localStorage.setItem(PHONE_KEY,phone);
+    document.getElementById('phone-display').textContent=phone;
+    setStep('otp');setTimeout(()=>document.getElementById('inp-otp').focus(),100);
+  }catch(e){showErr('phone','Network error');}
+  finally{btn.disabled=false;btn.textContent='Send OTP →';}
+}
+async function verifyCode(){
+  const code=document.getElementById('inp-otp').value.trim();if(!code) return;
+  clearErr('otp');const btn=document.getElementById('btn-otp');btn.disabled=true;btn.textContent='Verifying…';
+  try{
+    const r=await fetch('/api/auth/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:pendingPhone,code})});
+    const d=await r.json();
+    if(d.error==='2FA_REQUIRED'){setStep('2fa');setTimeout(()=>document.getElementById('inp-2fa').focus(),100);return;}
+    if(!r.ok||!d.ok){showErr('otp',d.error||'Invalid code');return;}
+    token=d.token;localStorage.setItem(TOKEN_KEY,token);
+    if(d.session) localStorage.setItem(SESSION_KEY,d.session);
+    setStep('done');setTimeout(()=>showApp(d.user),1200);
+  }catch(e){showErr('otp','Network error');}
+  finally{btn.disabled=false;btn.textContent='Verify →';}
+}
+async function verify2FA(){
+  const password=document.getElementById('inp-2fa').value;if(!password) return;
+  clearErr('2fa');const btn=document.getElementById('btn-2fa');btn.disabled=true;btn.textContent='Verifying…';
+  try{
+    const r=await fetch('/api/auth/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:pendingPhone,code:document.getElementById('inp-otp').value.trim(),password})});
+    const d=await r.json();if(!r.ok||!d.ok){showErr('2fa',d.error||'Wrong password');return;}
+    token=d.token;localStorage.setItem(TOKEN_KEY,token);
+    if(d.session) localStorage.setItem(SESSION_KEY,d.session);
+    setStep('done');setTimeout(()=>showApp(d.user),1200);
+  }catch(e){showErr('2fa','Network error');}
+  finally{btn.disabled=false;btn.textContent='Continue →';}
+}
+function goBack(){setStep('phone');clearErr('otp');document.getElementById('inp-otp').value='';}
+
+// ── TOASTS ────────────────────────────────────────────────────────────
+function toast(type,title,msg){
+  const icons={ok:'✅',err:'❌',inf:'ℹ️'};
+  const el=document.createElement('div');el.className=`toast ${type}`;
+  el.innerHTML=`<div class="ti">${icons[type]||'📢'}</div><div class="tb"><h5>${title}</h5><p>${msg}</p></div>`;
+  document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),5000);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+function fmtDur(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return h?`${h}:${p(m)}:${p(sec)}`:`${m}:${p(sec)}`;}
+function p(n){return String(n).padStart(2,'0');}
+function fmtBytes(b){if(!b)return'0 B';const u=['B','KB','MB','GB'];let i=0;while(b>=1024&&i<3){b/=1024;i++;}return`${b.toFixed(1)} ${u[i]}`;}
+function fmtDate(s){if(!s)return'—';try{return new Date(s).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',dateStyle:'medium',timeStyle:'short'});}catch{return s;}}
+function esc(s){return String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+</script>
+</body>
+</html>
