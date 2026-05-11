@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZestyyMedia — Courses</title>
+  <meta name="description" content="Browse scraped courses with download links.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;0,800;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: #dc2626; color: #fff; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem;
+      height: 64px;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .nav-left { display: flex; align-items: center; gap: 2.5rem; }
+    .logo {
+      font-size: 1.6rem; font-weight: 900; font-style: italic;
+      letter-spacing: -1px; text-transform: uppercase;
+      color: #dc2626; text-decoration: none; cursor: pointer;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.65rem; font-weight: 900; letter-spacing: 0.2em;
+      text-transform: uppercase; color: #737373; text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .badge {
+      background: #dc2626; color: #fff;
+      font-size: 0.6rem; font-weight: 900; letter-spacing: 0.05em;
+      text-transform: uppercase; padding: 4px 8px; border-radius: 4px;
+    }
+    .menu-btn {
+      display: none; background: none; border: none; color: #fff;
+      cursor: pointer; padding: 6px;
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .menu-btn { display: flex; align-items: center; }
+      nav { padding: 0 1rem; }
+    }
+
+    /* ── MOBILE DRAWER ── */
+    .drawer-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.9); backdrop-filter: blur(16px);
+    }
+    .drawer-overlay.open { display: block; }
+    .drawer {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 260px;
+      background: #0a0a0a; border-left: 1px solid rgba(255,255,255,0.05);
+      padding: 1.5rem 2rem; display: flex; flex-direction: column;
+    }
+    .drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; }
+    .drawer-logo { font-size: 1.4rem; font-weight: 900; font-style: italic; color: #dc2626; text-transform: uppercase; }
+    .drawer-close { background: none; border: none; color: #737373; cursor: pointer; padding: 4px; transition: color 0.2s; }
+    .drawer-close:hover { color: #fff; }
+    .drawer-links { display: flex; flex-direction: column; gap: 1.75rem; }
+    .drawer-links a {
+      font-size: 1.5rem; font-weight: 900; font-style: italic;
+      letter-spacing: -0.5px; text-transform: uppercase;
+      color: #525252; text-decoration: none; transition: color 0.2s;
+    }
+    .drawer-links a:hover, .drawer-links a.active { color: #dc2626; }
+    .drawer-footer {
+      margin-top: auto; padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: #404040; line-height: 1.8;
+    }
+
+    /* ── MAIN ── */
+    main { max-width: 1800px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    @media (max-width: 640px) { main { padding: 1.5rem 1rem 3rem; } }
+
+    /* ── SECTION HEADER ── */
+    .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .section-title {
+      font-size: 1rem; font-weight: 900; font-style: italic;
+      letter-spacing: -0.5px; text-transform: uppercase; white-space: nowrap;
+    }
+    .section-title.red { color: #dc2626; }
+    .section-line { flex: 1; height: 1px; background: rgba(255,255,255,0.05); }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      display: flex; align-items: center; gap: 0.75rem;
+      flex-wrap: wrap; margin-bottom: 1.75rem;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
+    .search-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: #525252; pointer-events: none;
+    }
+    .search-icon svg { width: 16px; height: 16px; }
+    #search {
+      width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem;
+      background: #171717; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.75rem; color: #fff;
+      font-family: 'Inter', sans-serif; font-size: 0.8rem;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #search::placeholder { color: #525252; }
+    #search:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
+
+    .update-btn {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      background: #dc2626; border: none; border-radius: 0.75rem;
+      color: #fff; font-family: 'Inter', sans-serif;
+      font-size: 0.7rem; font-weight: 900; letter-spacing: 0.1em;
+      text-transform: uppercase; cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      white-space: nowrap;
+    }
+    .update-btn:hover { background: #b91c1c; transform: translateY(-1px); }
+    .update-btn:active { transform: translateY(0); }
+    .update-btn:disabled { background: #3f1212; color: #7f3030; cursor: not-allowed; transform: none; }
+    .update-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .update-btn.spinning svg { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .manage-btn {
+      padding: 0.65rem 1rem;
+      background: #171717; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.75rem; color: #737373;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem; font-weight: 900; letter-spacing: 0.1em;
+      text-transform: uppercase; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .manage-btn:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+
+    .count-label {
+      font-size: 0.6rem; font-weight: 900; letter-spacing: 0.15em;
+      text-transform: uppercase; color: #525252; white-space: nowrap; align-self: center;
+      margin-left: auto;
+    }
+    .count-label b { color: #fff; }
+
+    /* ── STATUS BAR ── */
+    #statusBar {
+      display: none; align-items: center; gap: 0.6rem;
+      margin-bottom: 1rem; padding: 0.65rem 1rem;
+      background: #111; border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 0.75rem;
+      font-size: 0.72rem; font-weight: 600; color: #737373;
+    }
+    #statusBar.visible { display: flex; }
+    #statusBar .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #dc2626;
+      animation: pulse 1s ease-in-out infinite; flex-shrink: 0;
+    }
+    @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
+    #statusBar.done .dot { background: #22c55e; animation: none; }
+    #statusBar.done { color: #a3a3a3; }
+
+    /* ── GROUPS PANEL ── */
+    #groupsPanel {
+      display: none; margin-bottom: 1.5rem;
+      background: #111; border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 1rem; padding: 1.25rem 1.5rem;
+    }
+    #groupsPanel.open { display: block; }
+    .panel-title {
+      font-size: 0.65rem; font-weight: 900; letter-spacing: 0.2em;
+      text-transform: uppercase; color: #525252; margin-bottom: 1rem;
+    }
+    .group-add-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    #groupInput {
+      flex: 1; padding: 0.6rem 0.9rem;
+      background: #171717; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.6rem; color: #fff;
+      font-family: 'Inter', sans-serif; font-size: 0.8rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    #groupInput::placeholder { color: #404040; }
+    #groupInput:focus { border-color: #dc2626; }
+    .add-btn {
+      padding: 0.6rem 1rem;
+      background: #dc2626; border: none; border-radius: 0.6rem;
+      color: #fff; font-family: 'Inter', sans-serif;
+      font-size: 0.7rem; font-weight: 900; letter-spacing: 0.1em;
+      text-transform: uppercase; cursor: pointer; transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .add-btn:hover { background: #b91c1c; }
+    .group-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .group-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.55rem 0.75rem;
+      background: #171717; border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 0.5rem;
+    }
+    .group-item-link {
+      font-size: 0.78rem; font-weight: 600; color: #a3a3a3;
+      text-decoration: none; font-family: monospace;
+    }
+    .group-item-link:hover { color: #fff; }
+    .remove-btn {
+      background: none; border: none; color: #404040; cursor: pointer;
+      padding: 2px 6px; font-size: 0.7rem; transition: color 0.2s;
+      border-radius: 4px;
+    }
+    .remove-btn:hover { color: #dc2626; background: rgba(220,38,38,0.1); }
+    .no-groups {
+      font-size: 0.75rem; color: #404040; font-style: italic;
+      padding: 0.5rem 0;
+    }
+
+    /* ── BENTO GRID ── */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    @media (max-width: 640px) {
+      .bento-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+    }
+
+    /* ── COURSE CARD ── */
+    .course-card {
+      position: relative;
+      background: #111;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 1.25rem;
+      padding: 1.25rem 1.25rem 1rem;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+    }
+    .course-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(220,38,38,0.04) 0%, transparent 55%);
+      opacity: 0; transition: opacity 0.25s; border-radius: inherit;
+    }
+    .course-card:hover {
+      border-color: rgba(220,38,38,0.25);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(220,38,38,0.1);
+    }
+    .course-card:hover::before { opacity: 1; }
+
+    /* corner decoration */
+    .card-corner {
+      position: absolute; top: 0; right: 0;
+      width: 60px; height: 60px;
+      background: linear-gradient(225deg, rgba(220,38,38,0.12) 0%, transparent 60%);
+      border-radius: 0 1.25rem 0 60px;
+    }
+
+    .card-meta {
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .card-source {
+      font-size: 0.58rem; font-weight: 900; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #dc2626;
+      background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.2);
+      padding: 2px 7px; border-radius: 4px; text-decoration: none;
+      transition: background 0.2s;
+    }
+    .card-source:hover { background: rgba(220,38,38,0.2); }
+    .card-date {
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em;
+      color: #404040; text-transform: uppercase; margin-left: auto;
+    }
+
+    .card-title {
+      font-size: 0.9rem; font-weight: 700; line-height: 1.4;
+      color: #e5e5e5;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-link-row { display: flex; align-items: center; gap: 0.5rem; margin-top: auto; }
+    .mega-btn {
+      display: flex; align-items: center; gap: 0.45rem;
+      flex: 1;
+      padding: 0.6rem 0.9rem;
+      background: #171717; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.65rem; color: #a3a3a3;
+      font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      text-decoration: none; cursor: pointer;
+      transition: all 0.2s; overflow: hidden;
+    }
+    .mega-btn:hover {
+      background: #dc2626; border-color: #dc2626; color: #fff;
+    }
+    .mega-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .mega-btn span {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .copy-btn {
+      padding: 0.6rem 0.7rem;
+      background: #171717; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.65rem; color: #525252;
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .copy-btn:hover { background: #1c1c1c; border-color: rgba(255,255,255,0.15); color: #fff; }
+    .copy-btn svg { width: 13px; height: 13px; display: block; }
+    .copy-btn.copied { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #22c55e; }
+
+    /* ── SKELETON ── */
+    .skeleton {
+      background: #111; border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 1.25rem; height: 170px;
+      animation: shimmer 1.6s ease-in-out infinite;
+    }
+    @keyframes shimmer { 0%,100%{ opacity:0.4; } 50%{ opacity:0.7; } }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      grid-column: 1 / -1; text-align: center;
+      padding: 5rem 1rem; color: #525252;
+    }
+    .empty-state h3 {
+      font-size: 1.5rem; font-weight: 900; font-style: italic;
+      letter-spacing: -0.5px; text-transform: uppercase;
+      color: #fff; margin-bottom: 0.5rem;
+    }
+    .empty-state p { font-size: 0.8rem; font-weight: 500; }
+    .empty-state code {
+      display: inline-block; margin-top: 0.75rem;
+      padding: 0.4rem 0.8rem; background: #171717;
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 6px;
+      font-size: 0.75rem; color: #dc2626; font-family: monospace;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 2rem 1.5rem; text-align: center;
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase; color: #404040;
+    }
+    footer strong { color: #737373; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-left">
+      <a class="logo" href="#">zestyy</a>
+      <ul class="nav-links">
+        <li><a href="#">Channels</a></li>
+        <li><a href="#" class="active">Courses</a></li>
+      </ul>
+    </div>
+    <div class="nav-right">
+      <div class="badge">Mega</div>
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="6"  y2="6"/>
+          <line x1="4" x2="20" y1="12" y2="12"/>
+          <line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MOBILE DRAWER -->
+  <div class="drawer-overlay" id="drawerOverlay">
+    <div class="drawer">
+      <div class="drawer-head">
+        <span class="drawer-logo">zestyy</span>
+        <button class="drawer-close" id="drawerClose" aria-label="Close menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+      <nav class="drawer-links">
+        <a href="#">Channels</a>
+        <a href="#" class="active">Courses</a>
+      </nav>
+      <div class="drawer-footer">
+        Premium Experience<br>Powered by ZestyStream
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main>
+
+    <div class="section-header">
+      <h2 class="section-title red">Courses</h2>
+      <div class="section-line"></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
+        <input type="text" id="search" placeholder="Search courses..." autocomplete="off" spellcheck="false">
+      </div>
+
+      <button class="update-btn" id="updateBtn" title="Scrape latest courses from your groups">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+          <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+          <path d="M16 16h5v5"/>
+        </svg>
+        Update Courses
+      </button>
+
+      <button class="manage-btn" id="manageBtn">⚙ Groups</button>
+
+      <div class="count-label" id="countLabel"><b>—</b> courses</div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="statusBar">
+      <span class="dot"></span>
+      <span id="statusText">Scraping groups…</span>
+    </div>
+
+    <!-- Groups Panel -->
+    <div id="groupsPanel">
+      <div class="panel-title">Course Groups — t.me links to scrape for Mega links</div>
+      <div class="group-add-row">
+        <input type="text" id="groupInput" placeholder="https://t.me/groupname">
+        <button class="add-btn" id="addGroupBtn">+ Add</button>
+      </div>
+      <div class="group-list" id="groupList">
+        <div class="no-groups">No groups added yet.</div>
+      </div>
+    </div>
+
+    <!-- Bento Grid -->
+    <div class="bento-grid" id="grid">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>© 2026 <strong>ZestyyMedia</strong> &nbsp;·&nbsp; For personal use only &nbsp;·&nbsp; Built with ❤️</p>
+  </footer>
+
+  <script>
+    // ── CONFIG ──────────────────────────────────────────────────────
+    // Point this to your Railway/Render bot URL. Change before deploying.
+    const BOT_API = window.location.origin;  // same Railway URL
+      ? 'http://localhost:8080'
+      : 'https://zestyycourses.up.railway.app'; // <-- replace with your Railway URL
+
+    // ── STATE ───────────────────────────────────────────────────────
+    let allCourses = [];
+    let pollTimer  = null;
+
+    const grid       = document.getElementById('grid');
+    const searchInput= document.getElementById('search');
+    const countLabel = document.getElementById('countLabel');
+    const updateBtn  = document.getElementById('updateBtn');
+    const manageBtn  = document.getElementById('manageBtn');
+    const statusBar  = document.getElementById('statusBar');
+    const statusText = document.getElementById('statusText');
+    const groupsPanel= document.getElementById('groupsPanel');
+    const groupList  = document.getElementById('groupList');
+    const groupInput = document.getElementById('groupInput');
+    const addGroupBtn= document.getElementById('addGroupBtn');
+
+    // ── FETCH COURSES ───────────────────────────────────────────────
+    async function fetchCourses() {
+      try {
+        const res  = await fetch(`${BOT_API}/api/courses`);
+        const data = await res.json();
+        return data;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function loadCourses() {
+      grid.innerHTML = `
+        <div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>
+        <div class="skeleton"></div><div class="skeleton"></div>`;
+      const data = await fetchCourses();
+      if (!data) {
+        showError('Cannot reach bot API', `Set BOT_API to your Railway URL. Currently: <code>${BOT_API}</code>`);
+        return;
+      }
+      allCourses = data.courses || [];
+      if (data.last_updated) {
+        const d = new Date(data.last_updated);
+        const ago = timeAgo(d);
+        statusBar.classList.add('visible', 'done');
+        statusText.textContent = `Last updated ${ago} · ${allCourses.length} courses from ${data.group_count} groups`;
+      }
+      render();
+    }
+
+    // ── TRIGGER SCRAPE ──────────────────────────────────────────────
+    async function triggerScrape() {
+      setUpdating(true);
+      statusBar.className = 'visible';
+      statusText.textContent = 'Scraping groups for Mega links…';
+      try {
+        await fetch(`${BOT_API}/api/courses`, { method: 'POST' });
+        pollScrapeStatus();
+      } catch (e) {
+        setUpdating(false);
+        statusText.textContent = 'Failed to reach bot.';
+      }
+    }
+
+    function pollScrapeStatus() {
+      clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        const data = await fetchCourses();
+        if (!data) return;
+        statusText.textContent = `Scraping… found ${(data.courses||[]).length} courses so far`;
+        if (data.status !== 'running') {
+          clearInterval(pollTimer);
+          allCourses = data.courses || [];
+          setUpdating(false);
+          statusBar.className = 'visible done';
+          const ago = data.last_updated ? timeAgo(new Date(data.last_updated)) : 'just now';
+          statusText.textContent = `Updated ${ago} · ${allCourses.length} courses`;
+          render();
+        }
+      }, 2000);
+    }
+
+    function setUpdating(yes) {
+      updateBtn.disabled = yes;
+      updateBtn.classList.toggle('spinning', yes);
+    }
+
+    // ── RENDER CARDS ────────────────────────────────────────────────
+    function render() {
+      const term = searchInput.value.trim().toLowerCase();
+      const list = term
+        ? allCourses.filter(c => c.title.toLowerCase().includes(term) || (c.group||'').toLowerCase().includes(term))
+        : allCourses;
+
+      countLabel.innerHTML = `<b>${list.length}</b> course${list.length !== 1 ? 's' : ''}`;
+
+      if (!list.length) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <h3>No courses yet</h3>
+            <p>Add Telegram group links below, then hit <strong>Update Courses</strong>.</p>
+            <code>⚙ Groups → Add t.me/link → Update Courses</code>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = list.map(c => {
+        const shortLink = c.mega_link.replace('https://mega.nz/', '').substring(0, 28) + '…';
+        return `
+          <div class="course-card">
+            <div class="card-corner"></div>
+            <div class="card-meta">
+              <a class="card-source" href="${c.group_link || '#'}" target="_blank" rel="noopener">
+                ${escHtml(c.group || 'Unknown')}
+              </a>
+              ${c.date ? `<span class="card-date">${c.date}</span>` : ''}
+            </div>
+            <div class="card-title">${escHtml(c.title)}</div>
+            <div class="card-link-row">
+              <a class="mega-btn" href="${escHtml(c.mega_link)}" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>${escHtml(shortLink)}</span>
+              </a>
+              <button class="copy-btn" title="Copy link" onclick="copyLink(this, '${escHtml(c.mega_link)}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function showError(title, msg) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <h3>${title}</h3>
+          <p>${msg}</p>
+        </div>`;
+    }
+
+    // ── GROUPS PANEL ────────────────────────────────────────────────
+    async function loadGroups() {
+      try {
+        const res  = await fetch(`${BOT_API}/api/course-groups`);
+        const data = await res.json();
+        renderGroups(data.groups || []);
+      } catch {
+        renderGroups([]);
+      }
+    }
+
+    function renderGroups(groups) {
+      if (!groups.length) {
+        groupList.innerHTML = '<div class="no-groups">No groups added yet.</div>';
+        return;
+      }
+      groupList.innerHTML = groups.map(g => `
+        <div class="group-item">
+          <a class="group-item-link" href="${escHtml(g)}" target="_blank" rel="noopener">${escHtml(g)}</a>
+          <button class="remove-btn" onclick="removeGroup('${escHtml(g)}')">✕</button>
+        </div>`).join('');
+    }
+
+    async function addGroup() {
+      const val = groupInput.value.trim();
+      if (!val) return;
+      if (!val.includes('t.me/') && !val.includes('telegram.me/')) {
+        groupInput.style.borderColor = '#dc2626';
+        setTimeout(() => groupInput.style.borderColor = '', 1500);
+        return;
+      }
+      try {
+        const res  = await fetch(`${BOT_API}/api/course-groups`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'add', link: val }),
+        });
+        const data = await res.json();
+        renderGroups(data.groups || []);
+        groupInput.value = '';
+      } catch { alert('Could not reach bot API.'); }
+    }
+
+    async function removeGroup(link) {
+      try {
+        const res  = await fetch(`${BOT_API}/api/course-groups`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'remove', link }),
+        });
+        const data = await res.json();
+        renderGroups(data.groups || []);
+      } catch { }
+    }
+
+    // ── COPY ────────────────────────────────────────────────────────
+    function copyLink(btn, url) {
+      navigator.clipboard.writeText(url).then(() => {
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 1500);
+      });
+    }
+
+    // ── HELPERS ─────────────────────────────────────────────────────
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function timeAgo(d) {
+      const s = Math.floor((Date.now() - d) / 1000);
+      if (s < 60)  return `${s}s ago`;
+      if (s < 3600) return `${Math.floor(s/60)}m ago`;
+      if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+      return `${Math.floor(s/86400)}d ago`;
+    }
+
+    // ── EVENTS ──────────────────────────────────────────────────────
+    updateBtn.addEventListener('click', triggerScrape);
+    searchInput.addEventListener('input', render);
+
+    manageBtn.addEventListener('click', () => {
+      const open = groupsPanel.classList.toggle('open');
+      if (open) loadGroups();
+    });
+
+    addGroupBtn.addEventListener('click', addGroup);
+    groupInput.addEventListener('keydown', e => { if (e.key === 'Enter') addGroup(); });
+
+    // Mobile drawer
+    document.getElementById('menuBtn').addEventListener('click', () =>
+      document.getElementById('drawerOverlay').classList.add('open'));
+    document.getElementById('drawerClose').addEventListener('click', () =>
+      document.getElementById('drawerOverlay').classList.remove('open'));
+    document.getElementById('drawerOverlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('drawerOverlay'))
+        document.getElementById('drawerOverlay').classList.remove('open');
+    });
+
+    // ── INIT ────────────────────────────────────────────────────────
+    loadCourses();
+  </script>
+</body>
+</html>
